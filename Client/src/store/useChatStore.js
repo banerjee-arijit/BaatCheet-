@@ -75,14 +75,47 @@ export const useChatStore = create(
         }
       },
 
-      // ✅ FIXED: Better socket subscription with retry logic
+      // ✅ Update user's last message and move to top
+      updateUserLastMessage: (userId, message) => {
+        const { users } = get();
+
+        const updatedUsers = users.map((user) => {
+          if (user._id === userId) {
+            return {
+              ...user,
+              lastMessage: message.text || "📷 Image",
+              lastMessageTime: new Date(message.createdAt).toLocaleTimeString(
+                "en-US",
+                {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                }
+              ),
+            };
+          }
+          return user;
+        });
+
+        // ✅ Find the user and move to top
+        const userIndex = updatedUsers.findIndex((u) => u._id === userId);
+
+        if (userIndex !== -1) {
+          const [user] = updatedUsers.splice(userIndex, 1);
+          updatedUsers.unshift(user);
+          console.log("✅ User moved to top:", user.username);
+        }
+
+        set({ users: updatedUsers });
+      },
+
       subscribeToMessages: () => {
         const socket = useAuthStore.getState().socket;
+        const authUser = useAuthStore.getState().authUser;
 
         if (!socket) {
           console.log("❌ Socket not initialized yet");
 
-          // ✅ Retry after 1 second if socket not ready
           setTimeout(() => {
             console.log("🔄 Retrying socket subscription...");
             get().subscribeToMessages();
@@ -93,7 +126,6 @@ export const useChatStore = create(
         if (!socket.connected) {
           console.log("❌ Socket not connected yet, waiting...");
 
-          // ✅ Wait for socket to connect
           socket.once("connect", () => {
             console.log("✅ Socket connected, now subscribing...");
             get().subscribeToMessages();
@@ -103,13 +135,21 @@ export const useChatStore = create(
 
         console.log("✅ Subscribed to newMessage events");
 
-        // Remove previous listener to avoid duplicates
         socket.off("newMessage");
 
-        // Listen for new messages
         socket.on("newMessage", (message) => {
           console.log("📨 Received newMessage event:", message);
+
+          // ✅ Add message to current chat if conversation is open
           get().addMessage(message);
+
+          // ✅ Update last message preview and move to top
+          const otherUserId =
+            message.senderId === authUser?._id
+              ? message.receiverId
+              : message.senderId;
+
+          get().updateUserLastMessage(otherUserId, message);
         });
       },
 

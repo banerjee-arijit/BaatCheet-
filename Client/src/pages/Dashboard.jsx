@@ -7,6 +7,7 @@ import {
   MoreVertical,
   LogOut,
   ArrowLeft,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
@@ -16,6 +17,7 @@ const Dashboard = () => {
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     users = [],
@@ -23,7 +25,7 @@ const Dashboard = () => {
     setSelectedUser,
     isUserLoading,
   } = useChatStore();
-  const { user, logout, onlineUsers } = useAuthStore(); // ✅ Get onlineUsers
+  const { user, logout, onlineUsers, authUser } = useAuthStore();
 
   const currentPath = location.pathname;
   const isOverlayRoute =
@@ -31,10 +33,8 @@ const Dashboard = () => {
     currentPath === "/profile" ||
     currentPath === "/settings";
 
-  // ✅ Fetch users once on mount
   useEffect(() => {
     getUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -67,9 +67,62 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  // ✅ Check if user is online
   const isUserOnline = (userId) => {
     return onlineUsers.includes(userId);
+  };
+
+  const filteredUsers = users.filter(
+    (chatUser) =>
+      chatUser.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      chatUser.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // ✅ Format message preview with "You:" if sent by current user
+  const getMessagePreview = (message, senderId) => {
+    if (!message) return "Tap to chat";
+
+    const maxLength = 30;
+    let preview = message;
+
+    // ✅ Add "You: " if message sent by current user
+    if (senderId === authUser?._id) {
+      preview = "You: " + message;
+    }
+
+    if (preview.length > maxLength) {
+      return preview.substring(0, maxLength) + "...";
+    }
+    return preview;
+  };
+
+  // ✅ Format time (e.g., "2:30 PM" or "Yesterday")
+  const formatMessageTime = (timestamp) => {
+    if (!timestamp) return "";
+
+    const messageDate = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Check if today
+    if (messageDate.toDateString() === today.toDateString()) {
+      return messageDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+
+    // Check if yesterday
+    if (messageDate.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    }
+
+    // Older messages show date
+    return messageDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -154,6 +207,8 @@ const Dashboard = () => {
             <input
               type="text"
               placeholder="Search or start new chat"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
             />
           </div>
@@ -165,13 +220,13 @@ const Dashboard = () => {
             <div className="flex justify-center items-center py-10">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#615EF0]" />
             </div>
-          ) : users.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <p className="text-center text-gray-500 mt-10">
-              No users found yet.
+              {searchQuery ? "No users found" : "No users found yet."}
             </p>
           ) : (
-            users.map((chatUser) => {
-              const isOnline = isUserOnline(chatUser._id); // ✅ Check online status
+            filteredUsers.map((chatUser) => {
+              const isOnline = isUserOnline(chatUser._id);
 
               return (
                 <div
@@ -181,26 +236,24 @@ const Dashboard = () => {
                     currentPath === `/chat/${chatUser._id}` ? "bg-gray-50" : ""
                   }`}
                 >
-                  {/* ✅ Avatar with online indicator */}
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     {chatUser.profilePicture ? (
                       <img
                         src={chatUser.profilePicture}
                         alt={chatUser.fullName}
-                        className={`w-10 h-10 rounded-full object-cover ${
+                        className={`w-12 h-12 rounded-full object-cover ${
                           isOnline ? "ring-2 ring-green-500 ring-offset-2" : ""
                         }`}
                       />
                     ) : (
                       <div
-                        className={`w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-800 ${
+                        className={`w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-800 ${
                           isOnline ? "ring-2 ring-green-500 ring-offset-2" : ""
                         }`}
                       >
                         {chatUser.fullName?.[0]?.toUpperCase() || "?"}
                       </div>
                     )}
-                    {/* ✅ Green dot indicator */}
                     {isOnline && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                     )}
@@ -212,12 +265,21 @@ const Dashboard = () => {
                         {chatUser.username}
                       </h3>
                       <span className="text-xs text-gray-500">
-                        {chatUser.lastMessageTime || ""}
+                        {formatMessageTime(chatUser.lastMessageTime)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 truncate">
-                      {chatUser.lastMessage || "Tap to chat"}
-                    </p>
+                    {/* ✅ Message preview with "You:" prefix */}
+                    <div className="flex items-center gap-1">
+                      {chatUser.lastMessage === "📷 Image" && (
+                        <ImageIcon className="w-3.5 h-3.5 text-gray-500" />
+                      )}
+                      <p className="text-sm text-gray-600 truncate">
+                        {getMessagePreview(
+                          chatUser.lastMessage,
+                          chatUser.lastMessageSenderId
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );
