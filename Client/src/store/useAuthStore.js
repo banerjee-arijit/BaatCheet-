@@ -1,4 +1,3 @@
-// useAuthStore.js - UPDATED connectSocket function
 import { create } from "zustand";
 import { axiosInstance } from "./../lib/axios";
 import { persist } from "zustand/middleware";
@@ -6,7 +5,7 @@ import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
 const BASE_URL =
-  import.meta.env.MODE == "development" ? "http://localhost:5000" : "/";
+  import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
 
 export const useAuthStore = create(
   persist(
@@ -85,6 +84,7 @@ export const useAuthStore = create(
           });
           toast.success("Logged in successfully");
 
+          // Connect socket after state is set
           setTimeout(() => {
             get().connectSocket();
           }, 100);
@@ -157,18 +157,18 @@ export const useAuthStore = create(
           reconnection: true,
           reconnectionDelay: 1000,
           reconnectionAttempts: 5,
+          transports: ["websocket", "polling"],
         });
 
         newSocket.on("connect", () => {
           console.log("✅ Socket connected successfully:", newSocket.id);
         });
 
-        newSocket.on("onlineUsers", (userIds) => {
+        // ✅ FIX: Changed from "onlineUsers" to "getOnlineUsers" to match backend
+        newSocket.on("getOnlineUsers", (userIds) => {
           console.log("📡 Online users updated:", userIds);
           set({ onlineUsers: userIds });
         });
-
-        // ✅ REMOVED newMessage listener from here - it should be in ChatPage only
 
         newSocket.on("disconnect", () => {
           console.log("❌ Socket disconnected");
