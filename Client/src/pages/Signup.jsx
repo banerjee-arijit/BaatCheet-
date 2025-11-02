@@ -31,8 +31,7 @@ const Signup = () => {
               Create Your Account
             </h1>
             <p className="text-[#313957] text-[16px] sm:text-[17px] md:text-[18px] leading-[160%] tracking-[0.2px] mt-4 mx-auto md:mx-0 w-[90%] md:w-[80%]">
-              Join us today and start managing your projects efficiently and
-              easily!
+              Thoda time nikaalo, ek account banao… aur Baat Cheet chalu karo!
             </p>
           </div>
 

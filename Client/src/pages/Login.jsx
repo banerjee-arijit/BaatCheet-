@@ -29,8 +29,8 @@ const Login = () => {
               Welcome Back
             </h1>
             <p className="text-[#313957] text-[16px] sm:text-[17px] md:text-[18px] leading-[160%] tracking-[0.2px] mt-4 mx-auto md:mx-0 w-[90%] md:w-[80%]">
-              Today is a new day — it’s your day. Shape it your way and start
-              managing your projects efficiently.
+              Today is a new day — it’s your time to connect. Start real
+              conversations and stay close with Baat Cheet.
             </p>
           </div>
 
