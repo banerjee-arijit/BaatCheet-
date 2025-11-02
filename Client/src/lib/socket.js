@@ -1,6 +1,5 @@
 import { io } from "socket.io-client";
 
-// ✅ Get auth user from localStorage
 const getAuthUser = () => {
   try {
     const authStorage = localStorage.getItem("auth-storage");
@@ -14,17 +13,20 @@ const getAuthUser = () => {
   return null;
 };
 
-// ✅ Create socket connection
-const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+// ✅ Better environment detection
+const SOCKET_URL = import.meta.env.PROD
+  ? "https://baatcheet-1-p4p7.onrender.com"
+  : "http://localhost:5000";
+
+console.log("🌍 Socket URL:", SOCKET_URL); // ✅ Debug log
 
 let socket = null;
 
-// ✅ Initialize socket with userId
 export const initializeSocket = () => {
   const authUser = getAuthUser();
 
   if (!authUser?._id) {
-    console.log("⚠️ No authenticated user found");
+    console.log("❌ Cannot connect socket: No user logged in");
     return null;
   }
 
@@ -33,20 +35,27 @@ export const initializeSocket = () => {
     return socket;
   }
 
+  console.log("🔌 Connecting to socket server:", SOCKET_URL);
+  console.log("👤 User ID:", authUser._id); // ✅ Debug log
+
   socket = io(SOCKET_URL, {
     query: {
-      userId: authUser._id, // ✅ Send userId in query
+      userId: authUser._id,
     },
+    transports: ["websocket", "polling"],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 10000,
+    withCredentials: true,
   });
 
-  // ✅ Socket event listeners
   socket.on("connect", () => {
-    console.log("✅ Connected to socket server:", socket.id);
-    console.log("👤 User ID:", authUser._id);
+    console.log("✅ Socket connected:", socket.id);
   });
 
-  socket.on("disconnect", () => {
-    console.log("❌ Disconnected from socket server");
+  socket.on("disconnect", (reason) => {
+    console.log("❌ Socket disconnected:", reason);
   });
 
   socket.on("connect_error", (error) => {
@@ -56,20 +65,18 @@ export const initializeSocket = () => {
   return socket;
 };
 
-// ✅ Get existing socket instance
 export const getSocket = () => {
-  if (!socket) {
+  if (!socket || !socket.connected) {
     return initializeSocket();
   }
   return socket;
 };
 
-// ✅ Disconnect socket
 export const disconnectSocket = () => {
   if (socket) {
+    console.log("🔌 Disconnecting socket...");
     socket.disconnect();
     socket = null;
-    console.log("🔌 Socket disconnected");
   }
 };
 

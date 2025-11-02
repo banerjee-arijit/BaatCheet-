@@ -64,9 +64,14 @@ const ChatPage = () => {
   // ✅ Subscribe to socket messages
   useEffect(() => {
     console.log("🔔 Setting up message subscription");
-    subscribeToMessages();
+
+    // ✅ Wait a bit for socket to be ready
+    const timer = setTimeout(() => {
+      subscribeToMessages();
+    }, 500);
 
     return () => {
+      clearTimeout(timer);
       console.log("🔕 Cleaning up message subscription");
       unSubscribeToMessages();
     };

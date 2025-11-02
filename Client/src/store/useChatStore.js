@@ -60,11 +60,9 @@ export const useChatStore = create(
         }
       },
 
-      // ✅ Add message to state (called by socket listener)
       addMessage: (message) => {
         const { selectedUser } = get();
 
-        // Only add message if it's for the currently selected conversation
         if (
           selectedUser &&
           (message.senderId === selectedUser._id ||
@@ -77,26 +75,44 @@ export const useChatStore = create(
         }
       },
 
-      // ✅ Subscribe to new messages via socket
+      // ✅ FIXED: Better socket subscription with retry logic
       subscribeToMessages: () => {
         const socket = useAuthStore.getState().socket;
 
         if (!socket) {
-          console.log("❌ Socket not available for subscription");
+          console.log("❌ Socket not initialized yet");
+
+          // ✅ Retry after 1 second if socket not ready
+          setTimeout(() => {
+            console.log("🔄 Retrying socket subscription...");
+            get().subscribeToMessages();
+          }, 1000);
+          return;
+        }
+
+        if (!socket.connected) {
+          console.log("❌ Socket not connected yet, waiting...");
+
+          // ✅ Wait for socket to connect
+          socket.once("connect", () => {
+            console.log("✅ Socket connected, now subscribing...");
+            get().subscribeToMessages();
+          });
           return;
         }
 
         console.log("✅ Subscribed to newMessage events");
 
+        // Remove previous listener to avoid duplicates
+        socket.off("newMessage");
+
         // Listen for new messages
         socket.on("newMessage", (message) => {
-          if (message.senderId !== selectedUser._id) return;
           console.log("📨 Received newMessage event:", message);
           get().addMessage(message);
         });
       },
 
-      // ✅ Unsubscribe from messages
       unSubscribeToMessages: () => {
         const socket = useAuthStore.getState().socket;
 
@@ -109,7 +125,6 @@ export const useChatStore = create(
     {
       name: "chat-storage",
       partialize: (state) => ({
-        // ✅ only persist these
         selectedUser: state.selectedUser,
         users: state.users,
       }),
