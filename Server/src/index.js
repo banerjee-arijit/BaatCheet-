@@ -10,28 +10,28 @@ import path from "path";
 
 dotenv.config();
 
+const __dirname = path.resolve();
+
 // Middleware
-app.use(express.json({ limit: "10mb" })); // Combined - removed duplicate
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
-const __dirname = path.resolve();
-
-// endpoints
+// API endpoints FIRST
 app.use("/api/auth", authRouter);
 app.use("/api/messages", messageRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === "production") {
-  // ✅ === use karo, = nahi
   app.use(express.static(path.join(__dirname, "../Client/dist")));
 
-  app.get("*", (req, res) => {
+  // ✅ Use this instead of app.get("*")
+  app.use((req, res) => {
     res.sendFile(path.join(__dirname, "../Client/dist/index.html"));
   });
 }
-// Start the server and connect to the database
+
 const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {
