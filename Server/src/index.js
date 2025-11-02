@@ -8,11 +8,10 @@ import cors from "cors";
 import { app, server } from "./utils/socket.js";
 import path from "path";
 
-dotenv.config();
+dotenv.config(); //
 
 const __dirname = path.resolve();
 
-// ✅ Dynamic CORS configuration
 const allowedOrigins =
   process.env.NODE_ENV === "production"
     ? ["https://baatcheet-1-p4p7.onrender.com"]

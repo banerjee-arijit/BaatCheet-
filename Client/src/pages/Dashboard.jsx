@@ -77,14 +77,14 @@ const Dashboard = () => {
       chatUser.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // ✅ Format message preview with "You:" if sent by current user
+  // Format message preview with "You:" if sent by current user
   const getMessagePreview = (message, senderId) => {
     if (!message) return "Tap to chat";
 
     const maxLength = 30;
     let preview = message;
 
-    // ✅ Add "You: " if message sent by current user
+    // Add "You: " if message sent by current user
     if (senderId === authUser?._id) {
       preview = "You: " + message;
     }
@@ -95,7 +95,7 @@ const Dashboard = () => {
     return preview;
   };
 
-  // ✅ Format time (e.g., "2:30 PM" or "Yesterday")
+  // Format time (e.g., "2:30 PM" or "Yesterday")
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return "";
 
@@ -268,7 +268,7 @@ const Dashboard = () => {
                         {formatMessageTime(chatUser.lastMessageTime)}
                       </span>
                     </div>
-                    {/* ✅ Message preview with "You:" prefix */}
+                    {/* Message preview with "You:" prefix */}
                     <div className="flex items-center gap-1">
                       {chatUser.lastMessage === "📷 Image" && (
                         <ImageIcon className="w-3.5 h-3.5 text-gray-500" />

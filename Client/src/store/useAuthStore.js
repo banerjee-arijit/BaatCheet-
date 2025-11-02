@@ -164,7 +164,6 @@ export const useAuthStore = create(
           console.log("✅ Socket connected successfully:", newSocket.id);
         });
 
-        // ✅ FIX: Changed from "onlineUsers" to "getOnlineUsers" to match backend
         newSocket.on("getOnlineUsers", (userIds) => {
           console.log("📡 Online users updated:", userIds);
           set({ onlineUsers: userIds });

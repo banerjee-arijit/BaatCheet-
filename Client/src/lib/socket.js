@@ -13,12 +13,11 @@ const getAuthUser = () => {
   return null;
 };
 
-// ✅ Better environment detection
 const SOCKET_URL = import.meta.env.PROD
   ? "https://baatcheet-1-p4p7.onrender.com"
   : "http://localhost:5000";
 
-console.log("🌍 Socket URL:", SOCKET_URL); // ✅ Debug log
+console.log("🌍 Socket URL:", SOCKET_URL);
 
 let socket = null;
 
@@ -36,7 +35,7 @@ export const initializeSocket = () => {
   }
 
   console.log("🔌 Connecting to socket server:", SOCKET_URL);
-  console.log("👤 User ID:", authUser._id); // ✅ Debug log
+  console.log("👤 User ID:", authUser._id);
 
   socket = io(SOCKET_URL, {
     query: {

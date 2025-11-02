@@ -97,13 +97,12 @@ export const useChatStore = create(
           return user;
         });
 
-        // ✅ Find the user and move to top
         const userIndex = updatedUsers.findIndex((u) => u._id === userId);
 
         if (userIndex !== -1) {
           const [user] = updatedUsers.splice(userIndex, 1);
           updatedUsers.unshift(user);
-          console.log("✅ User moved to top:", user.username);
+          console.log("User moved to top:", user.username);
         }
 
         set({ users: updatedUsers });
@@ -140,10 +139,8 @@ export const useChatStore = create(
         socket.on("newMessage", (message) => {
           console.log("📨 Received newMessage event:", message);
 
-          // ✅ Add message to current chat if conversation is open
           get().addMessage(message);
 
-          // ✅ Update last message preview and move to top
           const otherUserId =
             message.senderId === authUser?._id
               ? message.receiverId

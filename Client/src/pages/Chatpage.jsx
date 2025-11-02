@@ -61,11 +61,11 @@ const ChatPage = () => {
     }
   }, [id, users, setSelectedUser, selectedUser]);
 
-  // ✅ Subscribe to socket messages
+  // Subscribe to socket messages
   useEffect(() => {
     console.log("🔔 Setting up message subscription");
 
-    // ✅ Wait a bit for socket to be ready
+    // Wait a bit for socket to be ready
     const timer = setTimeout(() => {
       subscribeToMessages();
     }, 500);
